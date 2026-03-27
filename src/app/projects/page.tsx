@@ -1,9 +1,7 @@
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
 import ProjectCard from "@/components/ProjectCard";
-import { Project, Category, CATEGORY_LABELS } from "@/lib/types";
-
-export const revalidate = 30;
+import { Project, Category } from "@/lib/types";
+import { MOCK_PROJECTS } from "@/lib/mock-data";
 
 export default async function ProjectsPage({
   searchParams,
@@ -14,15 +12,9 @@ export default async function ProjectsPage({
   const category = params.category as Category | undefined;
   const status = params.status ?? "open";
 
-  let query = supabase
-    .from("projects")
-    .select("*, bids(id)")
-    .order("created_at", { ascending: false });
-
-  if (category) query = query.eq("category", category);
-  if (status !== "all") query = query.eq("status", status);
-
-  const { data: projects } = await query;
+  let projects = MOCK_PROJECTS as Project[];
+  if (category) projects = projects.filter((p) => p.category === category);
+  if (status !== "all") projects = projects.filter((p) => p.status === status);
 
   return (
     <div className="flex flex-col min-h-dvh bg-zinc-950 text-zinc-50">
@@ -52,7 +44,7 @@ export default async function ProjectsPage({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl font-bold">Proyectos</h1>
-            <p className="text-zinc-500 text-sm mt-1">{projects?.length ?? 0} resultado{projects?.length !== 1 ? "s" : ""}</p>
+            <p className="text-zinc-500 text-sm mt-1">{projects.length} resultado{projects.length !== 1 ? "s" : ""}</p>
           </div>
         </div>
 
@@ -98,10 +90,10 @@ export default async function ProjectsPage({
           </div>
         </div>
 
-        {projects && projects.length > 0 ? (
+        {projects.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {projects.map((p) => (
-              <ProjectCard key={p.id} project={p as unknown as Project} />
+              <ProjectCard key={p.id} project={p} />
             ))}
           </div>
         ) : (

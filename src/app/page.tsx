@@ -1,25 +1,12 @@
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
 import ProjectCard from "@/components/ProjectCard";
 import { Project } from "@/lib/types";
+import { MOCK_PROJECTS } from "@/lib/mock-data";
 
-export const revalidate = 60;
-
-export default async function Home() {
-  const { data: projects } = await supabase
-    .from("projects")
-    .select("*, bids(id)")
-    .eq("status", "open")
-    .order("created_at", { ascending: false })
-    .limit(6);
-
-  const { count: totalProjects } = await supabase
-    .from("projects")
-    .select("*", { count: "exact", head: true });
-
-  const { count: totalBids } = await supabase
-    .from("bids")
-    .select("*", { count: "exact", head: true });
+export default function Home() {
+  const projects = MOCK_PROJECTS.filter((p) => p.status === "open").slice(0, 6) as Project[];
+  const totalProjects = MOCK_PROJECTS.length;
+  const totalBids = MOCK_PROJECTS.reduce((sum, p) => sum + (p.bids?.length ?? 0), 0);
 
   return (
     <div className="flex flex-col min-h-dvh bg-zinc-950 text-zinc-50">
@@ -85,11 +72,11 @@ export default async function Home() {
         <section className="border-b border-zinc-800 py-8 px-6">
           <div className="max-w-6xl mx-auto grid grid-cols-3 gap-6 text-center">
             <div>
-              <div className="text-3xl font-bold text-violet-400">{totalProjects ?? 0}</div>
+              <div className="text-3xl font-bold text-violet-400">{totalProjects}</div>
               <div className="text-sm text-zinc-500 mt-1">Proyectos publicados</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-violet-400">{totalBids ?? 0}</div>
+              <div className="text-3xl font-bold text-violet-400">{totalBids}</div>
               <div className="text-sm text-zinc-500 mt-1">Ofertas recibidas</div>
             </div>
             <div>
@@ -135,23 +122,21 @@ export default async function Home() {
         </section>
 
         {/* Recent Projects */}
-        {projects && projects.length > 0 && (
-          <section className="py-16 px-6">
-            <div className="max-w-6xl mx-auto">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-xl font-bold">Proyectos recientes</h2>
-                <Link href="/projects" className="text-sm text-violet-400 hover:text-violet-300">
-                  Ver todos →
-                </Link>
-              </div>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {projects.map((p) => (
-                  <ProjectCard key={p.id} project={p as unknown as Project} />
-                ))}
-              </div>
+        <section className="py-16 px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-xl font-bold">Proyectos recientes</h2>
+              <Link href="/projects" className="text-sm text-violet-400 hover:text-violet-300">
+                Ver todos →
+              </Link>
             </div>
-          </section>
-        )}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {projects.map((p) => (
+                <ProjectCard key={p.id} project={p} />
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* How it works */}
         <section className="py-16 px-6 border-t border-zinc-800 bg-zinc-900">

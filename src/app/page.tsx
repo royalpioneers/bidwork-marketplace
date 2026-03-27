@@ -124,9 +124,9 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col min-h-dvh bg-white text-zinc-900">
+    <div className="flex flex-col min-h-dvh bg-zinc-950 text-zinc-50">
       {/* Header */}
-      <header className="border-b border-zinc-200 px-6 py-4">
+      <header className="border-b border-zinc-800 px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,11 +143,11 @@ export default function Home() {
       <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-8 flex flex-col gap-8">
 
         {/* Generator Panel */}
-        <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-6 flex flex-col gap-5">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col gap-5">
 
           {/* Prompt */}
           <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-2">
+            <label className="block text-sm font-medium text-zinc-300 mb-2">
               Describe tu imagen
             </label>
             <textarea
@@ -155,7 +155,7 @@ export default function Home() {
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Un astronauta explorando una jungla alienígena al atardecer..."
               rows={3}
-              className="w-full bg-white border border-zinc-300 rounded-xl px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder-zinc-500 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleGenerate();
               }}
@@ -164,7 +164,7 @@ export default function Home() {
 
           {/* Art Style Chips */}
           <div>
-            <label className="block text-xs font-medium text-zinc-500 mb-2">Estilo artístico</label>
+            <label className="block text-xs font-medium text-zinc-400 mb-2">Estilo artístico</label>
             <div className="flex flex-wrap gap-2">
               {ART_STYLES.map((s) => (
                 <button
@@ -174,7 +174,7 @@ export default function Home() {
                   className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
                     artStyle === s.value
                       ? "bg-violet-600 text-white border-violet-600"
-                      : "bg-white text-zinc-600 border-zinc-300 hover:border-violet-400 hover:text-violet-600"
+                      : "bg-zinc-800 text-zinc-300 border-zinc-700 hover:border-violet-400 hover:text-violet-400"
                   }`}
                 >
                   {s.label}
@@ -186,11 +186,11 @@ export default function Home() {
           {/* Lighting + Camera + Size + Quality + Style */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Iluminación</label>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Iluminación</label>
               <select
                 value={lighting}
                 onChange={(e) => setLighting(e.target.value)}
-                className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-violet-500"
               >
                 {LIGHTING_OPTIONS.map((o) => (
                   <option key={o.label} value={o.value}>{o.label}</option>
@@ -198,11 +198,11 @@ export default function Home() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Ángulo / Cámara</label>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Ángulo / Cámara</label>
               <select
                 value={camera}
                 onChange={(e) => setCamera(e.target.value)}
-                className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-violet-500"
               >
                 {CAMERA_OPTIONS.map((o) => (
                   <option key={o.label} value={o.value}>{o.label}</option>
@@ -210,11 +210,11 @@ export default function Home() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Tamaño</label>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Tamaño</label>
               <select
                 value={size}
                 onChange={(e) => setSize(e.target.value as ImageSize)}
-                className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-violet-500"
               >
                 {(Object.keys(SIZE_LABELS) as ImageSize[]).map((s) => (
                   <option key={s} value={s}>{SIZE_LABELS[s]}</option>
@@ -222,22 +222,22 @@ export default function Home() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Calidad</label>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Calidad</label>
               <select
                 value={quality}
                 onChange={(e) => setQuality(e.target.value as ImageQuality)}
-                className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-violet-500"
               >
                 <option value="standard">Estándar</option>
                 <option value="hd">HD (más detalle)</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Renderizado</label>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Renderizado</label>
               <select
                 value={style}
                 onChange={(e) => setStyle(e.target.value as ImageStyle)}
-                className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-violet-500"
               >
                 <option value="vivid">Vívido (dramático)</option>
                 <option value="natural">Natural (realista)</option>
@@ -247,7 +247,7 @@ export default function Home() {
 
           {/* Negative Prompt */}
           <div>
-            <label className="block text-xs font-medium text-zinc-500 mb-1.5">
+            <label className="block text-xs font-medium text-zinc-400 mb-1.5">
               Prompt negativo <span className="text-zinc-400 font-normal">(qué evitar)</span>
             </label>
             <input
@@ -255,15 +255,15 @@ export default function Home() {
               value={negativePrompt}
               onChange={(e) => setNegativePrompt(e.target.value)}
               placeholder="texto, marcas de agua, desenfoque, colores apagados..."
-              className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
             />
           </div>
 
           {/* Prompt Preview */}
           {(artStyle || lighting || camera || negativePrompt) && prompt.trim() && (
-            <div className="bg-violet-50 border border-violet-100 rounded-lg px-4 py-3">
-              <p className="text-xs font-medium text-violet-500 mb-1">Prompt final que se enviará:</p>
-              <p className="text-xs text-violet-700 leading-relaxed">{finalPrompt}</p>
+            <div className="bg-violet-950 border border-violet-800 rounded-lg px-4 py-3">
+              <p className="text-xs font-medium text-violet-400 mb-1">Prompt final que se enviará:</p>
+              <p className="text-xs text-violet-300 leading-relaxed">{finalPrompt}</p>
             </div>
           )}
 
@@ -300,8 +300,8 @@ export default function Home() {
 
         {/* Loading State */}
         {loading && (
-          <div className="bg-zinc-50 border border-zinc-200 rounded-2xl overflow-hidden">
-            <div className="aspect-square bg-zinc-100 flex items-center justify-center animate-pulse">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+            <div className="aspect-square bg-zinc-800 flex items-center justify-center animate-pulse">
               <div className="text-center text-zinc-400">
                 <svg className="w-12 h-12 mx-auto mb-3 animate-spin text-violet-500" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -316,7 +316,7 @@ export default function Home() {
 
         {/* Selected Image */}
         {selected && !loading && (
-          <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
             <div className="relative">
               <Image
                 src={selected.url}
@@ -330,7 +330,7 @@ export default function Home() {
                 href={selected.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/80 backdrop-blur border border-zinc-200 text-zinc-700 text-xs font-medium hover:bg-white transition"
+                className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-black/60 backdrop-blur border border-zinc-700 text-zinc-200 text-xs font-medium hover:bg-white transition"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -339,7 +339,7 @@ export default function Home() {
               </a>
             </div>
             <div className="p-5">
-              <p className="text-sm text-zinc-700 font-medium">{selected.prompt}</p>
+              <p className="text-sm text-zinc-200 font-medium">{selected.prompt}</p>
               {selected.revisedPrompt && selected.revisedPrompt !== selected.prompt && (
                 <details className="mt-3">
                   <summary className="text-xs text-zinc-400 cursor-pointer hover:text-zinc-600">
@@ -348,7 +348,7 @@ export default function Home() {
                   <p className="mt-2 text-xs text-zinc-500 leading-relaxed">{selected.revisedPrompt}</p>
                 </details>
               )}
-              <span className="inline-flex items-center mt-3 px-2 py-1 rounded-md bg-zinc-100 text-zinc-500 text-xs">
+              <span className="inline-flex items-center mt-3 px-2 py-1 rounded-md bg-zinc-800 text-zinc-400 text-xs">
                 {SIZE_LABELS[selected.size]}
               </span>
             </div>
@@ -369,7 +369,7 @@ export default function Home() {
                   className={`relative aspect-square rounded-xl overflow-hidden border-2 transition ${
                     selected?.timestamp === img.timestamp
                       ? "border-violet-500"
-                      : "border-zinc-200 hover:border-zinc-400"
+                      : "border-zinc-800 hover:border-zinc-400"
                   }`}
                 >
                   <Image
@@ -388,7 +388,7 @@ export default function Home() {
         {/* Empty State */}
         {gallery.length === 0 && !loading && (
           <div className="flex-1 flex flex-col items-center justify-center text-center py-16">
-            <div className="w-16 h-16 rounded-2xl bg-zinc-50 border border-zinc-200 flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-4">
               <svg className="w-8 h-8 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
@@ -400,7 +400,7 @@ export default function Home() {
 
       </main>
 
-      <footer className="border-t border-zinc-200 px-6 py-4 text-center text-xs text-zinc-400">
+      <footer className="border-t border-zinc-800 px-6 py-4 text-center text-xs text-zinc-400">
         ImageAI — Powered by DALL-E 3 &amp; Next.js
       </footer>
     </div>

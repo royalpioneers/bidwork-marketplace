@@ -1,73 +1,50 @@
-# BidWork — Merchandising & Printing Marketplace
+# ImageAI — Generador de Imágenes con IA
 
-Plataforma de licitación para trabajos de merchandising e impresión. Las empresas publican proyectos y los proveedores compiten con sus mejores ofertas.
+App web para generar imágenes únicas con inteligencia artificial usando **DALL-E 3** de OpenAI. Construida con Next.js 16 y Tailwind CSS.
 
 ## Características
 
-- **Clientes** publican trabajos de merchandising o impresión con presupuesto y fecha límite
-- **Proveedores** exploran trabajos abiertos y envían propuestas con precio y tiempo de entrega
-- **Adjudicación de contratos** — el cliente elige al mejor proveedor y cierra el trato
-- **Panel de administración** vía Django Admin para gestión completa del marketplace
-- **Filtros** por categoría (merchandising / impresión) y rango de presupuesto
+- Genera imágenes a partir de un prompt de texto
+- Selección de tamaño: cuadrado (1:1), apaisado (16:9) o vertical (9:16)
+- Calidad estándar o HD
+- Estilo vívido o natural
+- Galería de imágenes generadas en la sesión
+- Descarga directa de imágenes
+- UI oscura y responsive
 
 ## Stack
 
-| Capa | Tecnología |
-|------|-----------|
-| Backend | Django 5.2 |
-| Admin | Django Admin |
-| Base de datos | PostgreSQL (producción) / SQLite (desarrollo) |
-| Archivos estáticos | WhiteNoise |
+| | |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| Estilos | Tailwind CSS |
+| IA | OpenAI DALL-E 3 |
 | Deploy | Vercel |
-
-## Estructura del proyecto
-
-```
-first-app-claude/
-├── backend/              # Django app principal
-│   ├── marketplace/      # App de licitación (modelos, vistas, templates)
-│   ├── api/              # API REST existente (DRF)
-│   ├── backend/          # Configuración Django
-│   ├── requirements.txt
-│   ├── vercel.json
-│   └── build_files.sh
-└── merch-mockup/         # Frontend Vue/Vite (mockup)
-```
-
-## Modelos principales
-
-- **Company** — perfil de empresa (cliente o proveedor)
-- **Job** — trabajo publicado (categoría, presupuesto, fecha límite, estado)
-- **Bid** — oferta de un proveedor sobre un trabajo
 
 ## Instalación local
 
 ```bash
-cd backend
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
+npm install
 ```
+
+Crea un archivo `.env.local` con tu API key de OpenAI:
+
+```env
+OPENAI_API_KEY=sk-...
+```
+
+Luego corre el servidor de desarrollo:
+
+```bash
+npm run dev
+```
+
+Abre [http://localhost:3000](http://localhost:3000).
 
 ## Deploy en Vercel
 
 1. Conecta el repositorio en [vercel.com](https://vercel.com)
-2. Configura **Root Directory** → `backend`
-3. Configura **Build Command** → `bash build_files.sh`
-4. Agrega las variables de entorno:
+2. Agrega la variable de entorno `OPENAI_API_KEY` en el dashboard de Vercel
+3. Deploy automático en cada push a `main`
 
-```env
-DJANGO_SETTINGS_MODULE=backend.settings_production
-SECRET_KEY=tu-clave-secreta
-DATABASE_URL=postgresql://...
-ALLOWED_HOSTS=.vercel.app
-```
-
-## Admin
-
-El panel de administración está disponible en `/admin/`. Crea un superusuario con:
-
-```bash
-python manage.py createsuperuser
-```
+> Obtén tu API key en [platform.openai.com/api-keys](https://platform.openai.com/api-keys)

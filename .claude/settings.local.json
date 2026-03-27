@@ -24,7 +24,9 @@
       "Bash(gh --version)",
       "Bash(gh auth:*)",
       "Bash(gh repo:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --yes)",
+      "Bash(npm run:*)"
     ]
   }
 }

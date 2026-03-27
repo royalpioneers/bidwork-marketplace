@@ -1,0 +1,82 @@
+{% extends "marketplace/base.html" %}
+
+{% block title %}Post a Job — BidWork{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <div class="mb-8">
+    <a href="{% url 'marketplace:job_list' %}" class="text-sm text-gray-500 hover:text-indigo-600">← Back to Jobs</a>
+    <h1 class="text-2xl font-bold text-gray-900 mt-2">Post a New Job</h1>
+    <p class="text-gray-500 text-sm mt-1">Fill in the details so vendors can submit accurate bids.</p>
+  </div>
+
+  <div class="bg-white rounded-xl border border-gray-200 p-8">
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+      <div class="mb-6 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="space-y-5">
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5" for="id_title">Job Title</label>
+          {{ form.title }}
+          {% if form.title.errors %}<p class="text-red-600 text-xs mt-1">{{ form.title.errors|join:", " }}</p>{% endif %}
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5" for="id_category">Category</label>
+          {{ form.category }}
+          {% if form.category.errors %}<p class="text-red-600 text-xs mt-1">{{ form.category.errors|join:", " }}</p>{% endif %}
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5" for="id_description">
+            Description
+            <span class="font-normal text-gray-400 ml-1">— What work needs to be done?</span>
+          </label>
+          {{ form.description }}
+          {% if form.description.errors %}<p class="text-red-600 text-xs mt-1">{{ form.description.errors|join:", " }}</p>{% endif %}
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5" for="id_requirements">
+            Requirements & Specifications
+            <span class="font-normal text-gray-400 ml-1">(optional)</span>
+          </label>
+          {{ form.requirements }}
+          <p class="text-xs text-gray-400 mt-1">Colors, sizes, materials, file formats, quantities, etc.</p>
+          {% if form.requirements.errors %}<p class="text-red-600 text-xs mt-1">{{ form.requirements.errors|join:", " }}</p>{% endif %}
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5" for="id_budget">Budget ($)</label>
+            {{ form.budget }}
+            {% if form.budget.errors %}<p class="text-red-600 text-xs mt-1">{{ form.budget.errors|join:", " }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5" for="id_deadline">Bid Deadline</label>
+            {{ form.deadline }}
+            {% if form.deadline.errors %}<p class="text-red-600 text-xs mt-1">{{ form.deadline.errors|join:", " }}</p>{% endif %}
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex gap-3 mt-8">
+        <button type="submit" class="flex-1 flex justify-center items-center px-4 py-2.5 rounded-lg bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors">
+          Post Job
+        </button>
+        <a href="{% url 'marketplace:job_list' %}" class="px-4 py-2.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -18,7 +18,8 @@
       "Bash(SECRET_KEY=supersecretkey12345678901234567890123456789012345 DJANGO_SETTINGS_MODULE=backend.settings_production python3 manage.py check --deploy)",
       "Bash(git config:*)",
       "Bash(git rm:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

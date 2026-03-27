@@ -21,8 +21,62 @@ const SIZE_LABELS: Record<ImageSize, string> = {
   "1024x1792": "Vertical (9:16)",
 };
 
+const ART_STYLES = [
+  { label: "Fotorrealista", value: "photorealistic, ultra detailed photography" },
+  { label: "Arte digital", value: "digital art, highly detailed" },
+  { label: "Pintura al óleo", value: "oil painting, classical art style" },
+  { label: "Acuarela", value: "watercolor painting, soft edges" },
+  { label: "Anime", value: "anime style, Studio Ghibli inspired" },
+  { label: "3D render", value: "3D render, octane render, unreal engine" },
+  { label: "Boceto", value: "pencil sketch, hand drawn" },
+  { label: "Cinematográfico", value: "cinematic shot, movie still, film grain" },
+  { label: "Pixel art", value: "pixel art, retro 16-bit style" },
+  { label: "Minimalista", value: "minimalist, clean lines, flat design" },
+];
+
+const LIGHTING_OPTIONS = [
+  { label: "Natural", value: "" },
+  { label: "Hora dorada", value: "golden hour lighting, warm sunlight" },
+  { label: "Hora azul", value: "blue hour, twilight lighting" },
+  { label: "Studio", value: "studio lighting, professional photography" },
+  { label: "Dramático", value: "dramatic chiaroscuro lighting, high contrast" },
+  { label: "Neón", value: "neon lights, cyberpunk lighting" },
+  { label: "Luz suave", value: "soft diffused lighting, overcast sky" },
+  { label: "Contraluz", value: "backlight, silhouette, rim lighting" },
+];
+
+const CAMERA_OPTIONS = [
+  { label: "Normal", value: "" },
+  { label: "Gran angular", value: "wide angle lens, 16mm" },
+  { label: "Primer plano", value: "close-up shot, macro photography" },
+  { label: "Retrato", value: "portrait shot, 85mm lens, shallow depth of field" },
+  { label: "Aéreo", value: "aerial view, drone shot, bird's eye view" },
+  { label: "Ojo de gusano", value: "worm's eye view, low angle shot" },
+  { label: "Ojo de pez", value: "fisheye lens, distorted perspective" },
+  { label: "Teleobjetivo", value: "telephoto lens, 200mm, compressed perspective" },
+];
+
+function buildFinalPrompt(
+  prompt: string,
+  artStyle: string,
+  lighting: string,
+  camera: string,
+  negativePrompt: string
+): string {
+  const parts = [prompt.trim()];
+  if (artStyle) parts.push(artStyle);
+  if (lighting) parts.push(lighting);
+  if (camera) parts.push(camera);
+  if (negativePrompt.trim()) parts.push(`avoid: ${negativePrompt.trim()}`);
+  return parts.join(", ");
+}
+
 export default function Home() {
   const [prompt, setPrompt] = useState("");
+  const [negativePrompt, setNegativePrompt] = useState("");
+  const [artStyle, setArtStyle] = useState("");
+  const [lighting, setLighting] = useState("");
+  const [camera, setCamera] = useState("");
   const [size, setSize] = useState<ImageSize>("1024x1024");
   const [quality, setQuality] = useState<ImageQuality>("standard");
   const [style, setStyle] = useState<ImageStyle>("vivid");
@@ -30,6 +84,8 @@ export default function Home() {
   const [error, setError] = useState("");
   const [gallery, setGallery] = useState<GeneratedImage[]>([]);
   const [selected, setSelected] = useState<GeneratedImage | null>(null);
+
+  const finalPrompt = buildFinalPrompt(prompt, artStyle, lighting, camera, negativePrompt);
 
   async function handleGenerate() {
     if (!prompt.trim()) return;
@@ -40,7 +96,7 @@ export default function Home() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, size, quality, style }),
+        body: JSON.stringify({ prompt: finalPrompt, size, quality, style }),
       });
 
       const data = await res.json();
@@ -52,7 +108,7 @@ export default function Home() {
 
       const newImage: GeneratedImage = {
         url: data.imageUrl,
-        prompt,
+        prompt: finalPrompt,
         revisedPrompt: data.revisedPrompt,
         size,
         timestamp: Date.now(),
@@ -87,91 +143,159 @@ export default function Home() {
       <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-8 flex flex-col gap-8">
 
         {/* Generator Panel */}
-        <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-6">
-          <div className="flex flex-col gap-4">
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-2">
-                Describe tu imagen
-              </label>
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Un astronauta explorando una jungla alienígena al atardecer, arte digital, ultradetallado..."
-                rows={3}
-                className="w-full bg-white border border-zinc-300 rounded-xl px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleGenerate();
-                }}
-              />
-            </div>
+        <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-6 flex flex-col gap-5">
 
-            <div className="grid sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-zinc-500 mb-1.5">Tamaño</label>
-                <select
-                  value={size}
-                  onChange={(e) => setSize(e.target.value as ImageSize)}
-                  className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
-                >
-                  {(Object.keys(SIZE_LABELS) as ImageSize[]).map((s) => (
-                    <option key={s} value={s}>{SIZE_LABELS[s]}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-zinc-500 mb-1.5">Calidad</label>
-                <select
-                  value={quality}
-                  onChange={(e) => setQuality(e.target.value as ImageQuality)}
-                  className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
-                >
-                  <option value="standard">Estándar</option>
-                  <option value="hd">HD (más detalle)</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-zinc-500 mb-1.5">Estilo</label>
-                <select
-                  value={style}
-                  onChange={(e) => setStyle(e.target.value as ImageStyle)}
-                  className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
-                >
-                  <option value="vivid">Vívido (dramático)</option>
-                  <option value="natural">Natural (realista)</option>
-                </select>
-              </div>
-            </div>
-
-            {error && (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
-                {error}
-              </p>
-            )}
-
-            <button
-              onClick={handleGenerate}
-              disabled={loading || !prompt.trim()}
-              className="flex items-center justify-center gap-2 w-full sm:w-auto sm:self-end px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm transition-colors"
-            >
-              {loading ? (
-                <>
-                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Generando...
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  Generar imagen
-                  <span className="text-violet-200 text-xs font-normal hidden sm:inline">⌘ Enter</span>
-                </>
-              )}
-            </button>
+          {/* Prompt */}
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 mb-2">
+              Describe tu imagen
+            </label>
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Un astronauta explorando una jungla alienígena al atardecer..."
+              rows={3}
+              className="w-full bg-white border border-zinc-300 rounded-xl px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleGenerate();
+              }}
+            />
           </div>
+
+          {/* Art Style Chips */}
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 mb-2">Estilo artístico</label>
+            <div className="flex flex-wrap gap-2">
+              {ART_STYLES.map((s) => (
+                <button
+                  key={s.value}
+                  type="button"
+                  onClick={() => setArtStyle(artStyle === s.value ? "" : s.value)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+                    artStyle === s.value
+                      ? "bg-violet-600 text-white border-violet-600"
+                      : "bg-white text-zinc-600 border-zinc-300 hover:border-violet-400 hover:text-violet-600"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Lighting + Camera + Size + Quality + Style */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Iluminación</label>
+              <select
+                value={lighting}
+                onChange={(e) => setLighting(e.target.value)}
+                className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
+              >
+                {LIGHTING_OPTIONS.map((o) => (
+                  <option key={o.label} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Ángulo / Cámara</label>
+              <select
+                value={camera}
+                onChange={(e) => setCamera(e.target.value)}
+                className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
+              >
+                {CAMERA_OPTIONS.map((o) => (
+                  <option key={o.label} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Tamaño</label>
+              <select
+                value={size}
+                onChange={(e) => setSize(e.target.value as ImageSize)}
+                className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
+              >
+                {(Object.keys(SIZE_LABELS) as ImageSize[]).map((s) => (
+                  <option key={s} value={s}>{SIZE_LABELS[s]}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Calidad</label>
+              <select
+                value={quality}
+                onChange={(e) => setQuality(e.target.value as ImageQuality)}
+                className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
+              >
+                <option value="standard">Estándar</option>
+                <option value="hd">HD (más detalle)</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Renderizado</label>
+              <select
+                value={style}
+                onChange={(e) => setStyle(e.target.value as ImageStyle)}
+                className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
+              >
+                <option value="vivid">Vívido (dramático)</option>
+                <option value="natural">Natural (realista)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Negative Prompt */}
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 mb-1.5">
+              Prompt negativo <span className="text-zinc-400 font-normal">(qué evitar)</span>
+            </label>
+            <input
+              type="text"
+              value={negativePrompt}
+              onChange={(e) => setNegativePrompt(e.target.value)}
+              placeholder="texto, marcas de agua, desenfoque, colores apagados..."
+              className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
+            />
+          </div>
+
+          {/* Prompt Preview */}
+          {(artStyle || lighting || camera || negativePrompt) && prompt.trim() && (
+            <div className="bg-violet-50 border border-violet-100 rounded-lg px-4 py-3">
+              <p className="text-xs font-medium text-violet-500 mb-1">Prompt final que se enviará:</p>
+              <p className="text-xs text-violet-700 leading-relaxed">{finalPrompt}</p>
+            </div>
+          )}
+
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+              {error}
+            </p>
+          )}
+
+          <button
+            onClick={handleGenerate}
+            disabled={loading || !prompt.trim()}
+            className="flex items-center justify-center gap-2 w-full sm:w-auto sm:self-end px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm transition-colors"
+          >
+            {loading ? (
+              <>
+                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Generando...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Generar imagen
+                <span className="text-violet-200 text-xs font-normal hidden sm:inline">⌘ Enter</span>
+              </>
+            )}
+          </button>
         </div>
 
         {/* Loading State */}

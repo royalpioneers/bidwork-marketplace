@@ -1,407 +1,220 @@
-"use client";
+import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+import ProjectCard from "@/components/ProjectCard";
+import { Project } from "@/lib/types";
 
-import { useState } from "react";
-import Image from "next/image";
+export const revalidate = 60;
 
-type ImageSize = "1024x1024" | "1792x1024" | "1024x1792";
-type ImageQuality = "standard" | "hd";
-type ImageStyle = "vivid" | "natural";
+export default async function Home() {
+  const { data: projects } = await supabase
+    .from("projects")
+    .select("*, bids(id)")
+    .eq("status", "open")
+    .order("created_at", { ascending: false })
+    .limit(6);
 
-interface GeneratedImage {
-  url: string;
-  prompt: string;
-  revisedPrompt?: string;
-  size: ImageSize;
-  timestamp: number;
-}
+  const { count: totalProjects } = await supabase
+    .from("projects")
+    .select("*", { count: "exact", head: true });
 
-const SIZE_LABELS: Record<ImageSize, string> = {
-  "1024x1024": "Cuadrada (1:1)",
-  "1792x1024": "Apaisada (16:9)",
-  "1024x1792": "Vertical (9:16)",
-};
-
-const ART_STYLES = [
-  { label: "Fotorrealista", value: "photorealistic, ultra detailed photography" },
-  { label: "Arte digital", value: "digital art, highly detailed" },
-  { label: "Pintura al óleo", value: "oil painting, classical art style" },
-  { label: "Acuarela", value: "watercolor painting, soft edges" },
-  { label: "Anime", value: "anime style, Studio Ghibli inspired" },
-  { label: "3D render", value: "3D render, octane render, unreal engine" },
-  { label: "Boceto", value: "pencil sketch, hand drawn" },
-  { label: "Cinematográfico", value: "cinematic shot, movie still, film grain" },
-  { label: "Pixel art", value: "pixel art, retro 16-bit style" },
-  { label: "Minimalista", value: "minimalist, clean lines, flat design" },
-];
-
-const LIGHTING_OPTIONS = [
-  { label: "Natural", value: "" },
-  { label: "Hora dorada", value: "golden hour lighting, warm sunlight" },
-  { label: "Hora azul", value: "blue hour, twilight lighting" },
-  { label: "Studio", value: "studio lighting, professional photography" },
-  { label: "Dramático", value: "dramatic chiaroscuro lighting, high contrast" },
-  { label: "Neón", value: "neon lights, cyberpunk lighting" },
-  { label: "Luz suave", value: "soft diffused lighting, overcast sky" },
-  { label: "Contraluz", value: "backlight, silhouette, rim lighting" },
-];
-
-const CAMERA_OPTIONS = [
-  { label: "Normal", value: "" },
-  { label: "Gran angular", value: "wide angle lens, 16mm" },
-  { label: "Primer plano", value: "close-up shot, macro photography" },
-  { label: "Retrato", value: "portrait shot, 85mm lens, shallow depth of field" },
-  { label: "Aéreo", value: "aerial view, drone shot, bird's eye view" },
-  { label: "Ojo de gusano", value: "worm's eye view, low angle shot" },
-  { label: "Ojo de pez", value: "fisheye lens, distorted perspective" },
-  { label: "Teleobjetivo", value: "telephoto lens, 200mm, compressed perspective" },
-];
-
-function buildFinalPrompt(
-  prompt: string,
-  artStyle: string,
-  lighting: string,
-  camera: string,
-  negativePrompt: string
-): string {
-  const parts = [prompt.trim()];
-  if (artStyle) parts.push(artStyle);
-  if (lighting) parts.push(lighting);
-  if (camera) parts.push(camera);
-  if (negativePrompt.trim()) parts.push(`avoid: ${negativePrompt.trim()}`);
-  return parts.join(", ");
-}
-
-export default function Home() {
-  const [prompt, setPrompt] = useState("");
-  const [negativePrompt, setNegativePrompt] = useState("");
-  const [artStyle, setArtStyle] = useState("");
-  const [lighting, setLighting] = useState("");
-  const [camera, setCamera] = useState("");
-  const [size, setSize] = useState<ImageSize>("1024x1024");
-  const [quality, setQuality] = useState<ImageQuality>("standard");
-  const [style, setStyle] = useState<ImageStyle>("vivid");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [gallery, setGallery] = useState<GeneratedImage[]>([]);
-  const [selected, setSelected] = useState<GeneratedImage | null>(null);
-
-  const finalPrompt = buildFinalPrompt(prompt, artStyle, lighting, camera, negativePrompt);
-
-  async function handleGenerate() {
-    if (!prompt.trim()) return;
-    setLoading(true);
-    setError("");
-
-    try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: finalPrompt, size, quality, style }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error ?? "Error al generar la imagen.");
-        return;
-      }
-
-      const newImage: GeneratedImage = {
-        url: data.imageUrl,
-        prompt: finalPrompt,
-        revisedPrompt: data.revisedPrompt,
-        size,
-        timestamp: Date.now(),
-      };
-
-      setGallery((prev) => [newImage, ...prev]);
-      setSelected(newImage);
-    } catch {
-      setError("Error de red. Intenta de nuevo.");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const { count: totalBids } = await supabase
+    .from("bids")
+    .select("*", { count: "exact", head: true });
 
   return (
     <div className="flex flex-col min-h-dvh bg-zinc-950 text-zinc-50">
       {/* Header */}
       <header className="border-b border-zinc-800 px-6 py-4">
-        <div className="max-w-5xl mx-auto flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <div>
-            <h1 className="font-bold text-lg leading-none">ImageAI</h1>
-            <p className="text-xs text-zinc-400">Generador de imágenes con DALL-E 3</p>
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+              </svg>
+            </div>
+            <span className="font-bold text-lg">PrintBid</span>
+          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/projects" className="text-sm text-zinc-400 hover:text-zinc-100 transition-colors">
+              Ver proyectos
+            </Link>
+            <Link
+              href="/projects/new"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Publicar proyecto
+            </Link>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-8 flex flex-col gap-8">
-
-        {/* Generator Panel */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col gap-5">
-
-          {/* Prompt */}
-          <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">
-              Describe tu imagen
-            </label>
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Un astronauta explorando una jungla alienígena al atardecer..."
-              rows={3}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder-zinc-500 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleGenerate();
-              }}
-            />
+      <main className="flex-1">
+        {/* Hero */}
+        <section className="bg-gradient-to-b from-zinc-900 to-zinc-950 border-b border-zinc-800 py-20 px-6">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-950 border border-violet-800 text-violet-300 text-xs font-medium mb-6">
+              Sublimación · Vinilo · Merchandising
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold mb-5 leading-tight">
+              El marketplace de licitación para impresión y producción
+            </h1>
+            <p className="text-zinc-400 text-lg mb-10 max-w-xl mx-auto">
+              Publica tu proyecto, recibe ofertas de empresas especializadas y elige la mejor propuesta.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                href="/projects/new"
+                className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold transition-colors"
+              >
+                Publicar un proyecto
+              </Link>
+              <Link
+                href="/projects"
+                className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-semibold transition-colors border border-zinc-700"
+              >
+                Ver proyectos abiertos
+              </Link>
+            </div>
           </div>
+        </section>
 
-          {/* Art Style Chips */}
-          <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-2">Estilo artístico</label>
-            <div className="flex flex-wrap gap-2">
-              {ART_STYLES.map((s) => (
-                <button
-                  key={s.value}
-                  type="button"
-                  onClick={() => setArtStyle(artStyle === s.value ? "" : s.value)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
-                    artStyle === s.value
-                      ? "bg-violet-600 text-white border-violet-600"
-                      : "bg-zinc-800 text-zinc-300 border-zinc-700 hover:border-violet-400 hover:text-violet-400"
-                  }`}
-                >
-                  {s.label}
-                </button>
+        {/* Stats */}
+        <section className="border-b border-zinc-800 py-8 px-6">
+          <div className="max-w-6xl mx-auto grid grid-cols-3 gap-6 text-center">
+            <div>
+              <div className="text-3xl font-bold text-violet-400">{totalProjects ?? 0}</div>
+              <div className="text-sm text-zinc-500 mt-1">Proyectos publicados</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-violet-400">{totalBids ?? 0}</div>
+              <div className="text-sm text-zinc-500 mt-1">Ofertas recibidas</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-violet-400">3</div>
+              <div className="text-sm text-zinc-500 mt-1">Categorías</div>
+            </div>
+          </div>
+        </section>
+
+        {/* Categories */}
+        <section className="py-16 px-6 border-b border-zinc-800">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-xl font-bold mb-8 text-center">¿Qué tipo de trabajo puedes publicar?</h2>
+            <div className="grid md:grid-cols-3 gap-5">
+              {[
+                {
+                  icon: "🎨",
+                  title: "Sublimación",
+                  desc: "Camisetas, tazas, almohadas, banners y cualquier superficie que acepte transferencia por calor.",
+                  color: "border-blue-800 bg-blue-950/40",
+                },
+                {
+                  icon: "✂️",
+                  title: "Vinilo",
+                  desc: "Corte de vinil, ploteo, letras y gráficos adhesivos para vehículos, vidrios y paredes.",
+                  color: "border-orange-800 bg-orange-950/40",
+                },
+                {
+                  icon: "🛍️",
+                  title: "Merchandising",
+                  desc: "Bolsas, gorras, playeras, artículos promocionales y producción de mercancía de marca.",
+                  color: "border-violet-800 bg-violet-950/40",
+                },
+              ].map((cat) => (
+                <div key={cat.title} className={`rounded-2xl border p-6 ${cat.color}`}>
+                  <div className="text-3xl mb-3">{cat.icon}</div>
+                  <h3 className="font-semibold text-zinc-100 mb-2">{cat.title}</h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">{cat.desc}</p>
+                </div>
               ))}
             </div>
           </div>
+        </section>
 
-          {/* Lighting + Camera + Size + Quality + Style */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Iluminación</label>
-              <select
-                value={lighting}
-                onChange={(e) => setLighting(e.target.value)}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-violet-500"
-              >
-                {LIGHTING_OPTIONS.map((o) => (
-                  <option key={o.label} value={o.value}>{o.label}</option>
+        {/* Recent Projects */}
+        {projects && projects.length > 0 && (
+          <section className="py-16 px-6">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-xl font-bold">Proyectos recientes</h2>
+                <Link href="/projects" className="text-sm text-violet-400 hover:text-violet-300">
+                  Ver todos →
+                </Link>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {projects.map((p) => (
+                  <ProjectCard key={p.id} project={p as unknown as Project} />
                 ))}
-              </select>
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Ángulo / Cámara</label>
-              <select
-                value={camera}
-                onChange={(e) => setCamera(e.target.value)}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-violet-500"
-              >
-                {CAMERA_OPTIONS.map((o) => (
-                  <option key={o.label} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Tamaño</label>
-              <select
-                value={size}
-                onChange={(e) => setSize(e.target.value as ImageSize)}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-violet-500"
-              >
-                {(Object.keys(SIZE_LABELS) as ImageSize[]).map((s) => (
-                  <option key={s} value={s}>{SIZE_LABELS[s]}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Calidad</label>
-              <select
-                value={quality}
-                onChange={(e) => setQuality(e.target.value as ImageQuality)}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-violet-500"
-              >
-                <option value="standard">Estándar</option>
-                <option value="hd">HD (más detalle)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Renderizado</label>
-              <select
-                value={style}
-                onChange={(e) => setStyle(e.target.value as ImageStyle)}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-violet-500"
-              >
-                <option value="vivid">Vívido (dramático)</option>
-                <option value="natural">Natural (realista)</option>
-              </select>
-            </div>
-          </div>
+          </section>
+        )}
 
-          {/* Negative Prompt */}
-          <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-              Prompt negativo <span className="text-zinc-400 font-normal">(qué evitar)</span>
-            </label>
-            <input
-              type="text"
-              value={negativePrompt}
-              onChange={(e) => setNegativePrompt(e.target.value)}
-              placeholder="texto, marcas de agua, desenfoque, colores apagados..."
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
-            />
-          </div>
-
-          {/* Prompt Preview */}
-          {(artStyle || lighting || camera || negativePrompt) && prompt.trim() && (
-            <div className="bg-violet-950 border border-violet-800 rounded-lg px-4 py-3">
-              <p className="text-xs font-medium text-violet-400 mb-1">Prompt final que se enviará:</p>
-              <p className="text-xs text-violet-300 leading-relaxed">{finalPrompt}</p>
-            </div>
-          )}
-
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
-              {error}
-            </p>
-          )}
-
-          <button
-            onClick={handleGenerate}
-            disabled={loading || !prompt.trim()}
-            className="flex items-center justify-center gap-2 w-full sm:w-auto sm:self-end px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm transition-colors"
-          >
-            {loading ? (
-              <>
-                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Generando...
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                Generar imagen
-                <span className="text-violet-200 text-xs font-normal hidden sm:inline">⌘ Enter</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* Loading State */}
-        {loading && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
-            <div className="aspect-square bg-zinc-800 flex items-center justify-center animate-pulse">
-              <div className="text-center text-zinc-400">
-                <svg className="w-12 h-12 mx-auto mb-3 animate-spin text-violet-500" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                <p className="text-sm">Creando tu imagen con DALL-E 3...</p>
-                <p className="text-xs mt-1 text-zinc-400">Puede tomar hasta 30 segundos</p>
+        {/* How it works */}
+        <section className="py-16 px-6 border-t border-zinc-800 bg-zinc-900">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-xl font-bold text-center mb-12">¿Cómo funciona?</h2>
+            <div className="grid md:grid-cols-2 gap-12">
+              <div>
+                <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-950 border border-blue-800 text-blue-300 text-xs font-medium mb-5">Para clientes</div>
+                <div className="space-y-5">
+                  {[
+                    ["Publica tu proyecto", "Describe lo que necesitas: tipo, cantidad, especificaciones y presupuesto."],
+                    ["Recibe ofertas", "Empresas especializadas revisan tu proyecto y envían sus propuestas."],
+                    ["Elige la mejor", "Compara precios, tiempos y propuestas, y contacta al proveedor ganador."],
+                  ].map(([title, desc], i) => (
+                    <div key={i} className="flex gap-4">
+                      <div className="w-7 h-7 rounded-full bg-violet-900 text-violet-300 flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</div>
+                      <div>
+                        <p className="font-medium text-zinc-200 text-sm">{title}</p>
+                        <p className="text-xs text-zinc-500 mt-0.5">{desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="inline-flex items-center px-3 py-1 rounded-full bg-violet-950 border border-violet-800 text-violet-300 text-xs font-medium mb-5">Para empresas de servicio</div>
+                <div className="space-y-5">
+                  {[
+                    ["Explora proyectos", "Navega proyectos abiertos filtrados por categoría y presupuesto."],
+                    ["Envía tu oferta", "Propón tu precio, tiempo de entrega y explica tu propuesta."],
+                    ["Gana contratos", "Si el cliente te elige, recibe su contacto directo para cerrar el trato."],
+                  ].map(([title, desc], i) => (
+                    <div key={i} className="flex gap-4">
+                      <div className="w-7 h-7 rounded-full bg-violet-900 text-violet-300 flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</div>
+                      <div>
+                        <p className="font-medium text-zinc-200 text-sm">{title}</p>
+                        <p className="text-xs text-zinc-500 mt-0.5">{desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        )}
+        </section>
 
-        {/* Selected Image */}
-        {selected && !loading && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
-            <div className="relative">
-              <Image
-                src={selected.url}
-                alt={selected.prompt}
-                width={1024}
-                height={1024}
-                className="w-full object-contain max-h-[70vh]"
-                unoptimized
-              />
-              <a
-                href={selected.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-black/60 backdrop-blur border border-zinc-700 text-zinc-200 text-xs font-medium hover:bg-white transition"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Descargar
-              </a>
-            </div>
-            <div className="p-5">
-              <p className="text-sm text-zinc-200 font-medium">{selected.prompt}</p>
-              {selected.revisedPrompt && selected.revisedPrompt !== selected.prompt && (
-                <details className="mt-3">
-                  <summary className="text-xs text-zinc-400 cursor-pointer hover:text-zinc-600">
-                    Ver prompt revisado por DALL-E
-                  </summary>
-                  <p className="mt-2 text-xs text-zinc-500 leading-relaxed">{selected.revisedPrompt}</p>
-                </details>
-              )}
-              <span className="inline-flex items-center mt-3 px-2 py-1 rounded-md bg-zinc-800 text-zinc-400 text-xs">
-                {SIZE_LABELS[selected.size]}
-              </span>
-            </div>
+        {/* CTA */}
+        <section className="py-16 px-6 border-t border-zinc-800 text-center">
+          <div className="max-w-xl mx-auto">
+            <h2 className="text-2xl font-bold mb-4">¿Listo para empezar?</h2>
+            <p className="text-zinc-400 mb-8">Publica tu proyecto gratis y empieza a recibir ofertas hoy.</p>
+            <Link
+              href="/projects/new"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold transition-colors"
+            >
+              Publicar proyecto gratis
+            </Link>
           </div>
-        )}
-
-        {/* Gallery */}
-        {gallery.length > 1 && (
-          <div>
-            <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">
-              Generadas en esta sesión
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {gallery.map((img) => (
-                <button
-                  key={img.timestamp}
-                  onClick={() => setSelected(img)}
-                  className={`relative aspect-square rounded-xl overflow-hidden border-2 transition ${
-                    selected?.timestamp === img.timestamp
-                      ? "border-violet-500"
-                      : "border-zinc-800 hover:border-zinc-400"
-                  }`}
-                >
-                  <Image
-                    src={img.url}
-                    alt={img.prompt}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {gallery.length === 0 && !loading && (
-          <div className="flex-1 flex flex-col items-center justify-center text-center py-16">
-            <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <p className="text-sm font-medium text-zinc-400">Escribe un prompt y genera tu primera imagen</p>
-            <p className="text-xs mt-1 text-zinc-300">Powered by DALL-E 3 · OpenAI</p>
-          </div>
-        )}
-
+        </section>
       </main>
 
-      <footer className="border-t border-zinc-800 px-6 py-4 text-center text-xs text-zinc-400">
-        ImageAI — Powered by DALL-E 3 &amp; Next.js
+      <footer className="border-t border-zinc-800 px-6 py-5 text-center text-xs text-zinc-600">
+        PrintBid — Marketplace de licitación para sublimación, vinilo y merchandising
       </footer>
     </div>
   );
